@@ -2,15 +2,19 @@ pipeline {
     agent any
 
     environment {
-        // This links the Jenkins IDs you created in Step 1 to the Python script
+        // Pulls your credentials from Jenkins
         LT_USERNAME = credentials('LT_USER')
         LT_ACCESS_KEY = credentials('LT_KEY')
+        
+        // This overrides the 'test' name that caused the platform conflict
+        LT_PROJECT_NAME = "Rahul_Selenium_Web_Project"
+        LT_BUILD_NAME = "Jenkins_Build_${BUILD_NUMBER}"
     }
 
     stages {
         stage('Initialize') {
             steps {
-                echo 'Preparing environment for Rahul...'
+                echo "Preparing environment for Rahul - Build #${env.BUILD_NUMBER}"
                 bat 'dir'
             }
         }
@@ -23,7 +27,7 @@ pipeline {
                         bat 'pip install -r requirements.txt'
                         
                         echo 'Executing LambdaTest Automation Script...'
-                        // The script will now receive the credentials via environment variables
+                        // We pass the new project name via environment variables
                         bat 'python lambdatest.py'
                     }
                 }
@@ -39,7 +43,7 @@ pipeline {
             echo 'SUCCESS: The Selenium tests ran on LambdaTest!'
         }
         failure {
-            echo 'FAILURE: Check the logs. Ensure LT_USER and LT_KEY are correct in Jenkins Credentials.'
+            echo 'FAILURE: Check the logs. If project name conflict persists, edit lambdatest.py manually.'
         }
     }
 }
