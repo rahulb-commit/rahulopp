@@ -1,37 +1,46 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-    stage('buildNumber') {
+    stages {
+        stage('Initialize') {
             steps {
-                script {
-                    // Store the Jenkins build number in a variable
-                    def myBuildNumber = env.BUILD_NUMBER
+                echo 'Starting Build for Rahul...'
+                // This will list the root files so you can see the folders
+                bat 'dir'
+            }
+        }
 
-                    // Now you can use 'myBuildNumber' for further processing
-                    echo "Current build number is: ${myBuildNumber}"
+        stage('Python Automation') {
+            steps {
+                // dir() enters the folder shown in your 1.png
+                dir('python-selenium-sample-master') {
+                    script {
+                        echo 'Checking folder contents...'
+                        bat 'dir' // Safety check: ensures lambdatest.py is visible here
+                        
+                        echo 'Installing Selenium and dependencies...'
+                        // We use --user or a virtual env if permissions are tight
+                        // Based on 2.png, the file is just named 'requirements'
+                        bat 'pip install -r requirements'
+                        
+                        echo 'Executing LambdaTest Script...'
+                        // Based on 2.png, the filename is lambdatest.py
+                        bat 'python lambdatest.py'
+                    }
                 }
             }
         }
-    stage('Checkout') {
-      steps {
-        checkout([$class: 'GitSCM',
-                  branches: [[name: '*/main']],
-                  userRemoteConfigs: [[url: 'https://github.com/rahulb-commit/rahulopp.git']]])
-      }
     }
 
-    stage('Test') {
-      steps {
-        bat 'python -m pip install selenium'
-        bat 'python -m pip install pytest'
-        bat 'python test1.py'
-      }
+    post {
+        always {
+            echo 'Build finished.'
+        }
+        success {
+            echo 'Success! Your Selenium tests passed.'
+        }
+        failure {
+            echo 'Failed! Check the logs to see if Python or the Script crashed.'
+        }
     }
-    stage('Report'){
-    steps{
-      lambdaTestReportPublisher 'automation'
-    }
-    }
-  }
-  }
+}
