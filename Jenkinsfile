@@ -1,23 +1,37 @@
 pipeline {
-    agent any 
+  agent any
 
-    stages {
-        stage('Build') {
+  stages {
+    stage('buildNumber') {
             steps {
-                echo 'Building your application...'
-                // Add your build commands here (e.g., sh 'npm install' or sh './mvnw install')
+                script {
+                    // Store the Jenkins build number in a variable
+                    def myBuildNumber = env.BUILD_NUMBER
+
+                    // Now you can use 'myBuildNumber' for further processing
+                    echo "Current build number is: ${myBuildNumber}"
+                }
             }
         }
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                // Add your test commands here (e.g., sh 'npm test')
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
-            }
-        }
+    stage('Checkout') {
+      steps {
+        checkout([$class: 'GitSCM',
+                  branches: [[name: '*/main']],
+                  userRemoteConfigs: [[url: 'https://github.com/rahulb-commit/rahulopp.git']]])
+      }
     }
-}
+
+    stage('Test') {
+      steps {
+        bat 'python -m pip install selenium'
+        bat 'python -m pip install pytest'
+        bat 'python test1.py'
+      }
+    }
+    stage('Report'){
+    steps{
+      lambdaTestReportPublisher 'automation'
+    }
+    }
+  }
+  }
