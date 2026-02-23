@@ -1,26 +1,29 @@
 pipeline {
     agent any
 
+    environment {
+        // This links the Jenkins IDs you created in Step 1 to the Python script
+        LT_USERNAME = credentials('LT_USER')
+        LT_ACCESS_KEY = credentials('LT_KEY')
+    }
+
     stages {
         stage('Initialize') {
             steps {
-                echo 'Starting Build for Rahul...'
-                // Verifying root directory structure
+                echo 'Preparing environment for Rahul...'
                 bat 'dir'
             }
         }
 
         stage('Python Automation') {
             steps {
-                // Entering the subfolder identified in your logs
                 dir('python-selenium-sample-master') {
                     script {
-                        echo 'Installing Selenium and dependencies...'
-                        // Corrected: Added .txt to match your actual file system
+                        echo 'Installing dependencies from requirements.txt...'
                         bat 'pip install -r requirements.txt'
                         
-                        echo 'Executing LambdaTest Script...'
-                        // Running the script found in your repository
+                        echo 'Executing LambdaTest Automation Script...'
+                        // The script will now receive the credentials via environment variables
                         bat 'python lambdatest.py'
                     }
                 }
@@ -30,13 +33,13 @@ pipeline {
 
     post {
         always {
-            echo 'Build finished.'
+            echo 'Pipeline Execution Finished.'
         }
         success {
-            echo 'Success! Your Selenium tests executed.'
+            echo 'SUCCESS: The Selenium tests ran on LambdaTest!'
         }
         failure {
-            echo 'Failed! Please check the console output for Python errors.'
+            echo 'FAILURE: Check the logs. Ensure LT_USER and LT_KEY are correct in Jenkins Credentials.'
         }
     }
 }
